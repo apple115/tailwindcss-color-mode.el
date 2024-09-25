@@ -3,7 +3,6 @@
 ;;   "A minnor mode for show tailwindcss color"
 ;;   (interactive)
 ;;  )
-
 ;; 读取当前字符串，如果是tailwindcss的颜色，就显示颜色
 
 (defun twcssc--delete-overlay (overlay &rest _)
@@ -20,41 +19,15 @@
     (overlay-put ov 'insert-in-front-hooks '(twcssc--delete-overlay))
     (overlay-put ov 'insert-behind-hooks '(twcssc--delete-overlay))))
 
-
-(defun search-and-colorize-gray-all ()
-  "Search for all occurrences of 'gray' and colorize corresponding regions."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (let ((gray-occurrences nil))
-      (while (search-forward "gray" nil t)
-        (let ((start (point)))
-          (if (save-excursion
-                (forward-char)
-                (looking-at "-\\([0-9]+\\)"))
-              (progn
-                (push (cons start (progn
-                                    (forward-sexp)
-                                    (point)))
-                      gray-occurrences))
-            (push (cons start (+ start 4)) ; Assuming "gray" is 4 characters long
-                  gray-occurrences)))
-      (dolist (occurrence gray-occurrences)
-        (let ((start (car occurrence))
-              (end (cdr occurrence)))
-          (let ((word-color (string-trim (concat "gray" (buffer-substring start end)))))
-          (message "%s" word-color) ;;-800
-          (colorize-region-with-overlay (- start 4) end  (get-tailwindcss-color-value-from-string word-color)))))))))
-
-(defvar my-custom-color-list '(gray slate)
+(defvar my-custom-color-list '(gray slate blue)
   "A custom color list for search and colorization.")
 
-(defun search-for-custom-list()
+(defun search-for-custom-list-and-colorize()
  (interactive)
  (save-excursion
     (goto-char (point-min))
+   (dolist (color-keyword my-custom-color-list)
     (let ((color-occurrences nil))
-      (dolist (color-keyword my-custom-color-list)
         (message "Color occurrences %s"  color-keyword )
         (while (search-forward (symbol-name color-keyword) nil t)
           (let ((start (point)))
@@ -68,35 +41,15 @@
                         color-occurrences))
               (push (cons start (+ start 4))
                     color-occurrences))))
-         )
-     (message "Color occurrences %S" color-occurrences))))
-
-
-
-(defun search-and-colorize-from-custom-list()
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (let ((color-occurrences nil))
-    (dolist (color-keyword my-custom-color-list)
-      (while (search-forward (symbol-name 'color-keyword) nil t)
-      (let ((start (point)))
-        (if (save-excursion
-              (forward-char)
-              (looking-at "-\\([0-9]+\\)"))
-            (progn
-              (push (cons start (progn
-                                  (forward-sexp)
-                                  (point)))
-                    color-occurrences))
-          (push (cons start (+ start (length color-keyword)))
-                color-occurrences)))
-      (dolist (occurrence color-occurrences)
+       (message "color-occurrences %s" color-occurrences)
+    (dolist (occurrence color-occurrences)
+       (message "occurrence %s" occurrence)
         (let ((start (car occurrence))
-              (end (cdr occurrence)))
-          (let ((word-color color-keyword))
+            (end (cdr occurrence)))
+          (message "start %s end %s" start end)
+        (let ((word-color(string-trim (concat (symbol-name color-keyword) (buffer-substring start end)) )))
             (message "%s" word-color)
-          (colorize-region-with-overlay start end (get-tailwindcss-color-value-from-string color-keyword))))))))))
+            (colorize-region-with-overlay start end (get-tailwindcss-color-value-from-string word-color)))))))))
 
 
 (defun get-tailwindcss-color-value-from-string (color-string)
@@ -106,7 +59,6 @@
 
 (message "Color value for 'gray-50': %s" (get-tailwindcss-color-value-from-string "gray-50"))
 
-;;;autoload
 (defcustom tailwindcss-colors-alist
   '(
     ;; (inherit . "inherit")
